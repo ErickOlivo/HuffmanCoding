@@ -1,0 +1,18 @@
+# Archivos de compilación
+*.o
+*.exe
+*.out
+
+# Carpetas de construcción
+build/
+bin/
+
+# Archivos generados por LaTeX
+*.aux
+*.log
+*.toc
+*.pdf
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
