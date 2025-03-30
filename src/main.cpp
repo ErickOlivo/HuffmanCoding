@@ -5,6 +5,7 @@
 #include "HuffmanTree.h"
 #include "HuffmanUtils.h" // Para deleteTree
 #include "HuffmanCodes.h"
+#include "HuffmanEncoder.h"
 
 
 
@@ -24,7 +25,7 @@ int main() {
 
     // 3. Imprimir un mensaje de confirmación
     if (root != nullptr) {
-        std::cout << "Árbol de Huffman construisto con éxito. " << "Frecuencia total: " << root->frequency << std::endl;
+        std::cout << "Árbol de Huffman construido con éxito. " << "Frecuencia total: " << root->frequency << std::endl;
     }
     else {
         std::cout << "No se pudo construir el árbol (texto vacío o error)." << std::endl;
@@ -39,12 +40,18 @@ int main() {
         std::cout << "Carácter: '" << pair.first << "' => " << pair.second << '\n';
     }
 
-    // 6. Liberar la memoria del árbol
+    // 6. Codificar el texto usando los códigos
+    std::string encodedText = encodeText(texto, codes);
+
+    // 7. Mostrar resultado
+    std::cout << "Texto original:     " << texto << std::endl;
+    std::cout << "Texto codificado:   " << encodedText << std::endl;
+
+    // 8. Liberar la memoria del árbol
     deleteTree(root);
 
     // Liberar memoria, si usamos punteros crudos
     // (Implementar una función para borrar recursivamente el árbol)
-    // deleteTree(root);
 
     return 0;
 }
@@ -60,5 +67,8 @@ g++ -Iinclude src/main.cpp src/frequency.cpp -o main
 g++ -Iinclude src/main.cpp src/frequency.cpp src/HuffmanTree.cpp src/HuffmanUtils.cpp -o main
 
 g++ -Iinclude src/main.cpp src/frequency.cpp src/HuffmanTree.cpp src/HuffmanUtils.cpp src/HuffmanCodes.cpp -o main
+
+g++ -Iinclude src/main.cpp src/frequency.cpp src/HuffmanTree.cpp src/HuffmanUtils.cpp src/HuffmanCodes.cpp src/HuffmanEncoder.cpp -o huffman
+
 
 */
