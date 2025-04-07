@@ -66,6 +66,8 @@ Encoded text:      01101001110011110110100
 Decoded text:      abracadabra
 Decoding successful: The decoded text matches the original.
 
+```bash
+
 ---
 
 ## 📌 Requirements
