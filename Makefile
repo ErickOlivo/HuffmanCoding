@@ -17,7 +17,8 @@ SOURCES = $(SRC_DIR)/main.cpp \
           $(SRC_DIR)/HuffmanTree.cpp \
           $(SRC_DIR)/HuffmanUtils.cpp \
           $(SRC_DIR)/HuffmanCodes.cpp \
-          $(SRC_DIR)/HuffmanEncoder.cpp
+          $(SRC_DIR)/HuffmanEncoder.cpp \
+          $(SRC_DIR)/HuffmanDecoder.cpp \
 
 # Archivos objeto (cambiando .cpp por .o)
 OBJECTS = $(SOURCES:.cpp=.o)
