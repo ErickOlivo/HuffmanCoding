@@ -1,0 +1,4 @@
+Huffman coding is a lossless data compression algorithm.
+The more a symbol appears, the shorter its code.
+This sample text repeats certain words, repeats certain words,
+and contains a mix of short and long characters to test your compressor.
