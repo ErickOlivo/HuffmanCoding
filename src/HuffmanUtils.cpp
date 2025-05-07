@@ -8,6 +8,9 @@
 #include <sstream>
 #include <algorithm>
 
+#include <array>           // paleta de colores ANSI
+#include <unordered_map>   // tipo freqMap
+
 
 /**
  * @brief Libera la memoria de un árbol de Huffman
@@ -104,3 +107,40 @@ void printHuffmanTreePretty(const HuffmanNode* root)
     auto [lines, width, mid, height] = buildPretty(root);
     for (const auto& l : lines) std::cout << l << '\n';
 }
+
+
+// Paleta básica de 6 colores ANSI (códigos 31‑36)
+static const std::array<const char*, 6> COLORS = {
+    "\033[31m", "\033[32m", "\033[33m",
+    "\033[34m", "\033[35m", "\033[36m"
+};
+
+/**
+ * @brief Imprime un histograma ASCII a color con las frecuencias de caracteres.
+ *
+ * Cada barra se dibuja con el bloque Unicode U+2588 y un color ANSI diferente.
+ * @param freqMap Mapa (carácter -> frecuencia).
+ */
+void printFrequencyHistogram(const std::unordered_map<char,int>& freqMap)
+{
+    if (freqMap.empty()) return;
+
+    int maxFreq = 0;
+    for (auto& kv : freqMap)
+        maxFreq = std::max(maxFreq, kv.second);
+
+    const int BAR_WIDTH = 40;
+    std::cout << "\nFrecuencia de caracteres\n------------------------\n";
+
+    int colorIdx = 0;
+    for (auto& kv : freqMap) {
+        double ratio  = static_cast<double>(kv.second) / maxFreq;
+        int blocks    = static_cast<int>(ratio * BAR_WIDTH);
+        const char* c = COLORS[colorIdx++ % COLORS.size()];
+
+        std::cout << "'" << kv.first << "' | "
+                  << c << std::string(blocks, '\u2588') << "\033[0m "
+                  << kv.second << '\n';
+    }
+}
+
