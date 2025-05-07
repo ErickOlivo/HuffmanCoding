@@ -41,3 +41,19 @@ void printHuffmanTreePretty(const HuffmanNode* root);
  * @param freqMap Mapa (carácter -> frecuencia).
  */
 void printFrequencyHistogram(const std::unordered_map<char,int>& freqMap);
+
+
+/**
+ * @brief Lee un archivo completo a un std::string.
+ * @param path Ruta del archivo.
+ * @return Contenido del archivo (lanza std::runtime_error si falla).
+ */
+std::string readFileToString(const std::string& path);
+
+/**
+ * @brief Escribe una cadena de '0'/'1' (bitstream lógico) a un archivo.
+ * @param path Ruta de salida.
+ * @param bits Cadena con los bits.
+ */
+void writeBitStringToFile(const std::string& path, const std::string& bits);
+
