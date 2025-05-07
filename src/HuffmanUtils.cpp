@@ -1,7 +1,13 @@
 #include "HuffmanUtils.h"
+
 #include <iostream>
 #include <iomanip>  // Para std::setprecision
 #include <string>
+
+#include <vector>
+#include <sstream>
+#include <algorithm>
+
 
 /**
  * @brief Libera la memoria de un árbol de Huffman
@@ -34,4 +40,67 @@ void reportCompressionStats(const std::string& original, const std::string& enco
     std::cout << "\nBits originales : " << originalBits << " bits";
     std::cout << "\nBits codificados: " << encodedBits  << " bits";
     std::cout << "\nAhorro          : " << std::fixed << std::setprecision(2) << ahorro << "%\n";
+}
+
+
+/**
+ * @brief Construye recursivamente una representación 2‑D del subárbol.
+ *
+ * Devuelve: vector de líneas, ancho total, posición del centro, altura.
+ * Basado en la idea de https://stackoverflow.com/a/14648290
+ */
+static std::tuple<std::vector<std::string>, int, int, int>
+buildPretty(const HuffmanNode* node)
+{
+    if (!node) return { {}, 0, 0, 0 };
+
+    // Etiqueta para este nodo
+    std::ostringstream oss;
+    if (!node->left && !node->right)
+        oss << "('" << node->character << "', " << node->frequency << ")";
+    else
+        oss << "(*, " << node->frequency << ")";
+    std::string label = oss.str();
+    int labelW = static_cast<int>(label.size());
+
+    // Caso base: hoja
+    if (!node->left && !node->right)
+        return { { label }, labelW, labelW / 2, 1 };
+
+    // Construir hijos
+    auto [leftLines,  leftW,  leftMid,  leftH ] = buildPretty(node->left);
+    auto [rightLines, rightW, rightMid, rightH] = buildPretty(node->right);
+
+    int gap = 3;                                  // espacio mínimo entre sub‑árboles
+    int width  = leftW + gap + rightW;
+    int height = std::max(leftH, rightH) + 2;
+    int mid = leftW + gap / 2;                    // centro donde irá el label
+
+    std::vector<std::string> lines(height, std::string(width, ' '));
+
+    // Copiar label centrado
+    lines[0].replace(mid - labelW / 2, labelW, label);
+
+    // Ramas “/” y “\”
+    if (node->left)  lines[1][leftMid]                = '/';
+    if (node->right) lines[1][leftW + gap + rightMid] = '\\';
+
+    // Copiar sub‑líneas
+    for (int i = 0; i < leftH; ++i)
+        lines[i + 2].replace(0, leftW, leftLines[i]);
+    for (int i = 0; i < rightH; ++i)
+        lines[i + 2].replace(leftW + gap, rightW, rightLines[i]);
+
+    return { lines, width, mid, height };
+}
+
+/**
+ * @brief Imprime el árbol de Huffman con ramas diagonales “/ \” y nodos centrados.
+ *
+ * @param root Puntero a la raíz del árbol.
+ */
+void printHuffmanTreePretty(const HuffmanNode* root)
+{
+    auto [lines, width, mid, height] = buildPretty(root);
+    for (const auto& l : lines) std::cout << l << '\n';
 }
