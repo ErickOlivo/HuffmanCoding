@@ -27,6 +27,10 @@ int main() {
     // 2. Construir el árbol de Huffman
     HuffmanNode* root = buildHuffmanTree(freqMap);
 
+    // 2.1  Mostrar árbol “pretty” en la terminal
+    std::cout << "\nÁrbol de Huffman (pretty):\n";
+    printHuffmanTreePretty(root);
+    
     // 3. Imprimir un mensaje de confirmación
     if (root != nullptr) {
         std::cout << "\nÁrbol de Huffman construido con éxito. " << "Frecuencia total: " << root->frequency << std::endl;
