@@ -1,1 +1,0 @@
-hello hello hello world world huffman coding example text to compress using huffman algorithm. this is a small sample file so you can test your new file I/O feature.
