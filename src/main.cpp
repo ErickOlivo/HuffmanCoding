@@ -1,6 +1,8 @@
 #include <iostream>
-#include "frequency.h"
+#include <string>
 #include <unordered_map>
+
+#include "frequency.h"
 #include "HuffmanNode.h"
 #include "HuffmanTree.h"
 #include "HuffmanUtils.h" // Para deleteTree
@@ -10,34 +12,36 @@
 
 
 
-int main() {
+int main(int argc, char* argv[]) {
+    // 0. Texto de entrada: por argumento o demo
     std::string texto = "abracadabra";
+    std::string salidaBits = "output.bits";
+
+    if (argc > 1) {                      // se pasó un archivo
+        texto = readFileToString(argv[1]);
+        if (argc > 2) salidaBits = argv[2];   // nombre de salida opcional
+    }
 
     std::cout << "Texto original:     " << texto << std::endl;
 
-
-    // 1. Llamada a la función de cálculo de frecuecias
+    // 1. Cálculo de frecuencias
     std::unordered_map<char, int> freqMap = computeFrequencies(texto);
 
-    // Muestra las frecuencias en pantalla
-    for (auto& pair : freqMap) {
-        std::cout << "Caracter: '" << pair.first << "' - Frecuencia: " << pair.second << std::endl;
-    }
     // 1.1 Histograma ASCII a color
     printFrequencyHistogram(freqMap);
 
     // 2. Construir el árbol de Huffman
     HuffmanNode* root = buildHuffmanTree(freqMap);
 
-    // 2.1  Mostrar árbol “pretty” en la terminal
+    // 2.1 Mostrar árbol “pretty” en la terminal
     std::cout << "\nÁrbol de Huffman (pretty):\n";
     printHuffmanTreePretty(root);
-    
+
     // 3. Imprimir un mensaje de confirmación
     if (root != nullptr) {
-        std::cout << "\nÁrbol de Huffman construido con éxito. " << "Frecuencia total: " << root->frequency << std::endl;
-    }
-    else {
+        std::cout << "\nÁrbol de Huffman construido con éxito. "
+                  << "Frecuencia total: " << root->frequency << std::endl;
+    } else {
         std::cout << "No se pudo construir el árbol (texto vacío o error)." << std::endl;
     }
 
@@ -53,11 +57,14 @@ int main() {
     // 6. Codificar el texto usando los códigos
     std::string encodedText = encodeText(texto, codes);
 
+    // 6.1 Guardar bitstream lógico
+    writeBitStringToFile(salidaBits, encodedText);
+
     // 7. Mostrar resultado
     std::cout << "\nTexto codificado:   " << encodedText << std::endl;
+
     // 7.1 Estadísticas de compresión
     reportCompressionStats(texto, encodedText);
-
 
     // 8. Decodificar
     std::string decodedText = decodeText(encodedText, root);
@@ -66,17 +73,12 @@ int main() {
     // Validar que el texto original coincide con el decodificado
     if (decodedText == texto) {
         std::cout << "Decodificación exitosa: El texto decodificado coincide con el original.\n";
-    }
-    else {
+    } else {
         std::cout << "Error en la decodificación.\n";
     }
 
     // 9. Liberar la memoria del árbol
     deleteTree(root);
-
-    // Liberar memoria, si usamos punteros crudos
-    // (Implementar una función para borrar recursivamente el árbol)
-
     return 0;
 }
 
