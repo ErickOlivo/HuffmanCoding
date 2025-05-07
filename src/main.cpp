@@ -49,6 +49,9 @@ int main() {
 
     // 7. Mostrar resultado
     std::cout << "\nTexto codificado:   " << encodedText << std::endl;
+    // 7.1 Estadísticas de compresión
+    reportCompressionStats(texto, encodedText);
+
 
     // 8. Decodificar
     std::string decodedText = decodeText(encodedText, root);
