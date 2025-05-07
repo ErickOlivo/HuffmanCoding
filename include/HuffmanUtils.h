@@ -15,3 +15,20 @@ void deleteTree(HuffmanNode* node);
  * @param encoded Texto codificado (en forma de string de bits).
  */
 void reportCompressionStats(const std::string& original, const std::string& encoded);
+
+/**
+ * @brief Imprime el árbol de Huffman en formato “pretty” ASCII
+ *        con ramas diagonales ( `/`  y  `\` ).
+ *
+ * Ejemplo de salida:
+ *        (*, 11)
+ *        /     \
+ *    ('a', 5)  (*, 6)
+ *              /    \
+ *         ('b',2)  (*,4)
+ *                   /  \
+ *              ('c',1) ('d',1)
+ *
+ * @param root Puntero a la raíz del árbol.
+ */
+void printHuffmanTreePretty(const HuffmanNode* root);
