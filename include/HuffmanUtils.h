@@ -8,6 +8,7 @@
  */
 void deleteTree(HuffmanNode* node);
 
+
 /**
  * @brief Muestra estadísticas de compresión entre el texto original y codificado.
  *
@@ -15,6 +16,7 @@ void deleteTree(HuffmanNode* node);
  * @param encoded Texto codificado (en forma de string de bits).
  */
 void reportCompressionStats(const std::string& original, const std::string& encoded);
+
 
 /**
  * @brief Imprime el árbol de Huffman en formato “pretty” ASCII
@@ -32,3 +34,10 @@ void reportCompressionStats(const std::string& original, const std::string& enco
  * @param root Puntero a la raíz del árbol.
  */
 void printHuffmanTreePretty(const HuffmanNode* root);
+
+
+/**
+ * @brief Imprime un histograma ASCII a color con las frecuencias de caracteres.
+ * @param freqMap Mapa (carácter -> frecuencia).
+ */
+void printFrequencyHistogram(const std::unordered_map<char,int>& freqMap);
