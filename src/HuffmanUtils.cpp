@@ -11,6 +11,8 @@
 #include <array>           // paleta de colores ANSI
 #include <unordered_map>   // tipo freqMap
 
+#include <fstream>
+#include <stdexcept>
 
 /**
  * @brief Libera la memoria de un árbol de Huffman
@@ -44,6 +46,34 @@ void reportCompressionStats(const std::string& original, const std::string& enco
     std::cout << "\nBits codificados: " << encodedBits  << " bits";
     std::cout << "\nAhorro          : " << std::fixed << std::setprecision(2) << ahorro << "%\n";
 }
+
+
+/**
+ * @brief Lee un archivo completo y lo devuelve como std::string.
+ * @throws std::runtime_error si no se puede abrir.
+ */
+std::string readFileToString(const std::string& path)
+{
+    std::ifstream in(path, std::ios::binary);
+    if (!in)
+        throw std::runtime_error("Cannot open " + path);
+    return { std::istreambuf_iterator<char>(in),
+             std::istreambuf_iterator<char>() };
+}
+
+/**
+ * @brief Guarda una cadena de '0'/'1' (bitstream lógico) en un archivo.
+ * @throws std::runtime_error si no se puede crear/escribir.
+ */
+void writeBitStringToFile(const std::string& path, const std::string& bits)
+{
+    std::ofstream out(path, std::ios::binary);
+    if (!out)
+        throw std::runtime_error("Cannot open " + path + " for writing");
+    out << bits;
+    std::cout << "Bitstream written to " << path << '\n';
+}
+
 
 
 /**
