@@ -23,6 +23,8 @@ int main() {
     for (auto& pair : freqMap) {
         std::cout << "Caracter: '" << pair.first << "' - Frecuencia: " << pair.second << std::endl;
     }
+    // 1.1 Histograma ASCII a color
+    printFrequencyHistogram(freqMap);
 
     // 2. Construir el árbol de Huffman
     HuffmanNode* root = buildHuffmanTree(freqMap);
