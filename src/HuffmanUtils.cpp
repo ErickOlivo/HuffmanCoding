@@ -169,8 +169,9 @@ void printFrequencyHistogram(const std::unordered_map<char,int>& freqMap)
         const char* c = COLORS[colorIdx++ % COLORS.size()];
 
         std::cout << "'" << kv.first << "' | "
-                  << c << std::string(blocks, '\u2588') << "\033[0m "
-                  << kv.second << '\n';
+        << c << std::string(blocks, '\u2588') << "\033[0m "
+        << kv.second << '\n';
+
     }
 }
 
