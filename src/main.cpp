@@ -85,33 +85,33 @@ int main(int argc, char* argv[]) {
         std::cout << "Binary file decompressed to: " << decompressedFile << std::endl;
 
         std::string originalFromFile = readFileToString(inputPath);
-        std::string roundtrip = readFileToString(decompressedFile);
+        std::string roundtrip        = readFileToString(decompressedFile);
 
         if (roundtrip == originalFromFile) {
             std::cout << "Round-trip verification: SUCCESS" << std::endl;
         } else {
-            // std::cout << "Round-trip verification: FAILURE" << std::endl;
+            std::cout << "Round-trip verification: FAILURE" << std::endl;
             std::cout << "[DEBUG] Original size: " << originalFromFile.size()
-                    << ", Decompressed size: " << roundtrip.size() << std::endl;
+                      << ", Decompressed size: " << roundtrip.size() << std::endl;
 
-            size_t mismatchIndex = 0;
+            // Detailed character-by-character mismatch
             size_t len = std::min(roundtrip.size(), originalFromFile.size());
-            for (; mismatchIndex < len; ++mismatchIndex) {
-                if (roundtrip[mismatchIndex] != originalFromFile[mismatchIndex]) {
-                    std::cout << "[DEBUG] Mismatch at index " << mismatchIndex << ": original = '"
-                            << originalFromFile[mismatchIndex] << "' (" << static_cast<int>(originalFromFile[mismatchIndex])
-                            << "), decompressed = '" << roundtrip[mismatchIndex] << "' ("
-                            << static_cast<int>(roundtrip[mismatchIndex]) << ")\n";
+            for (size_t i = 0; i < len; ++i) {
+                if (roundtrip[i] != originalFromFile[i]) {
+                    std::cout << "[DEBUG] Mismatch at index " << i
+                              << ": original = '" << originalFromFile[i]
+                              << "' (" << static_cast<int>(originalFromFile[i])
+                              << "), decompressed = '" << roundtrip[i]
+                              << "' (" << static_cast<int>(roundtrip[i]) << ")\n";
                     break;
                 }
             }
-
             if (roundtrip.size() != originalFromFile.size()) {
                 std::cout << "[DEBUG] Sizes differ. Original ends with: '"
-                        << originalFromFile.back() << "' ("
-                        << static_cast<int>(originalFromFile.back()) << "), "
-                        << "Decompressed ends with: '" << roundtrip.back() << "' ("
-                        << static_cast<int>(roundtrip.back()) << ")\n";
+                          << originalFromFile.back() << "' ("
+                          << static_cast<int>(originalFromFile.back()) << "), Decompressed ends with: '"
+                          << roundtrip.back() << "' ("
+                          << static_cast<int>(roundtrip.back()) << ")\n";
             }
         }
     }
@@ -138,6 +138,7 @@ int main(int argc, char* argv[]) {
     deleteTree(root);
     return 0;
 }
+
 
 
 
