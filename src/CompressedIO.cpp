@@ -1,5 +1,5 @@
 #include "CompressedIO.h"
-#include "HuffmanUtils.h"
+#include "HuffmanUtils.h"    // readFileToString() and deleteTree()
 #include "frequency.h"
 #include "HuffmanTree.h"
 #include "HuffmanCodes.h"
@@ -7,11 +7,10 @@
 #include "HuffmanDecoder.h"
 
 #include <fstream>
+#include <cstdint>
 #include <vector>
 #include <unordered_map>
-#include <iterator>
-#include <cstdint>
-#include <cstring>  // <-- SOLUCIÓN AL memcmp
+#include <cstring>           // std::memcmp
 
 using namespace huffman;
 using namespace huffman::util;
@@ -21,49 +20,50 @@ static constexpr char MAGIC[4] = { 'H','U','F','0' };
 bool util::writeCompressedFile(const std::string& inputPath,
                                const std::string& compressedPath)
 {
-    // 1. Read whole input
+    /* 1. Read whole input (binary) */
     std::string data = readFileToString(inputPath);
 
-    // 2. Compute frequencies, build tree, generate codes, encode bits
-    auto freqMap = computeFrequencies(data);
-    auto root    = buildHuffmanTree(freqMap);
-    auto codes = generateHuffmanCodes(root);
+    /* 2. Build Huffman */
+    auto freqMap  = computeFrequencies(data);
+    HuffmanNode* root = buildHuffmanTree(freqMap);
+    auto  codes   = generateHuffmanCodes(root);
     std::string bitstr = encodeText(data, codes);
 
-    // 3. Pack bits into bytes (MSB-first)
+    /* 3. Pack bits -> bytes (MSB-first) */
     uint64_t bitCount = bitstr.size();
     size_t   byteCount = (bitCount + 7) / 8;
     std::vector<uint8_t> buffer(byteCount, 0);
-    for (uint64_t i = 0; i < bitCount; ++i) {
-        if (bitstr[i] == '1') {
-            buffer[i/8] |= uint8_t(1 << (7 - (i % 8)));
-        }
-    }
+    for (uint64_t i = 0; i < bitCount; ++i)
+        if (bitstr[i] == '1')
+            buffer[i / 8] |= uint8_t(1 << (7 - (i % 8)));
 
-    // 4. Write header + table + payload
+    /* 4. Write header + table + payload */
     std::ofstream out(compressedPath, std::ios::binary);
-    if (!out) return false;
+    if (!out) { deleteTree(root); return false; }
 
-    // magic
+    /* 4.1 magic */
     out.write(MAGIC, 4);
 
-    // unique count
-    uint32_t uniq = uint32_t(freqMap.size());
+    /* 4.2 unique-symbol count */
+    uint32_t uniq = static_cast<uint32_t>(freqMap.size());
     out.write(reinterpret_cast<char*>(&uniq), sizeof(uniq));
 
-    // symbol table
+    /* 4.3 symbol table */
     for (auto const& [ch, freq] : freqMap) {
         out.put(ch);
-        uint32_t f = uint32_t(freq);
+        uint32_t f = static_cast<uint32_t>(freq);
         out.write(reinterpret_cast<char*>(&f), sizeof(f));
     }
 
-    // bit-count
+    /* 4.4 total bit-count */
     out.write(reinterpret_cast<char*>(&bitCount), sizeof(bitCount));
 
-    // payload
-    out.write(reinterpret_cast<char*>(buffer.data()), buffer.size());
-    return bool(out);
+    /* 4.5 payload */
+    out.write(reinterpret_cast<char*>(buffer.data()),
+              static_cast<std::streamsize>(buffer.size()));
+
+    deleteTree(root);
+    return static_cast<bool>(out);
 }
 
 bool util::readCompressedFile(const std::string& compressedPath,
@@ -72,50 +72,56 @@ bool util::readCompressedFile(const std::string& compressedPath,
     std::ifstream in(compressedPath, std::ios::binary);
     if (!in) return false;
 
-    // 1. Verify magic
+    /* 1. verify magic */
     char magic[4];
     in.read(magic, 4);
     if (in.gcount() != 4 || std::memcmp(magic, MAGIC, 4) != 0)
         return false;
 
-    // 2. Read unique count
+    /* 2. unique count */
     uint32_t uniq;
     in.read(reinterpret_cast<char*>(&uniq), sizeof(uniq));
     if (!in) return false;
 
-    // 3. Read table
-    std::unordered_map<char, int> freqMap;
+    /* 3. frequency table */
+    std::unordered_map<char,int> freqMap;
     for (uint32_t i = 0; i < uniq; ++i) {
         char ch = in.get();
         uint32_t f;
         in.read(reinterpret_cast<char*>(&f), sizeof(f));
         if (!in) return false;
-        freqMap[ch] = int(f);
+        freqMap[ch] = static_cast<int>(f);
     }
 
-    // 4. Read bit-count
+    /* 4. bit-count */
     uint64_t bitCount;
     in.read(reinterpret_cast<char*>(&bitCount), sizeof(bitCount));
     if (!in) return false;
 
-    // 5. Read payload bytes
-    std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(in)),
-                                 std::istreambuf_iterator<char>());
+    /* 5. payload bytes */
+    size_t byteCount = (bitCount + 7) / 8;
+    std::vector<uint8_t> buffer(byteCount);
+    in.read(reinterpret_cast<char*>(buffer.data()),
+            static_cast<std::streamsize>(byteCount));
+    if (!in) return false;
 
-    // 6. Unpack bits into a string of '0'/'1'
+    /* 6. unpack bits to string */
     std::string bits;
     bits.reserve(bitCount);
     for (uint64_t i = 0; i < bitCount; ++i) {
-        uint8_t byte = buffer[i/8];
-        bool bit = (byte & (1 << (7 - (i % 8)))) != 0;
-        bits.push_back(bit ? '1' : '0');
+        bool b = (buffer[i / 8] & (1 << (7 - (i % 8)))) != 0;
+        bits.push_back(b ? '1' : '0');
     }
 
-    // 7. Rebuild tree, decode, write to file
-    auto root    = buildHuffmanTree(freqMap);
+    /* 7. rebuild tree & decode */
+    HuffmanNode* root = buildHuffmanTree(freqMap);
     std::string decoded = decodeText(bits, root);
+    deleteTree(root);
+
+    /* 8. write output */
     std::ofstream out(outputPath, std::ios::binary);
     if (!out) return false;
-    out << decoded;
-    return bool(out);
+    out.write(decoded.data(),
+              static_cast<std::streamsize>(decoded.size()));
+    return static_cast<bool>(out);
 }
