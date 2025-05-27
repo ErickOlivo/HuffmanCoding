@@ -1,10 +1,8 @@
 # Nombre del ejecutable
 TARGET = main
 
-# Carpeta de encabezados
+# Carpetas
 INCLUDE_DIR = include
-
-# Carpeta de código fuente
 SRC_DIR = src
 
 # Compilador y banderas
@@ -19,8 +17,9 @@ SOURCES = $(SRC_DIR)/main.cpp \
           $(SRC_DIR)/HuffmanCodes.cpp \
           $(SRC_DIR)/HuffmanEncoder.cpp \
           $(SRC_DIR)/HuffmanDecoder.cpp \
+          $(SRC_DIR)/CompressedIO.cpp
 
-# Archivos objeto (cambiando .cpp por .o)
+# Archivos objeto (reemplaza .cpp por .o)
 OBJECTS = $(SOURCES:.cpp=.o)
 
 # Regla por defecto
