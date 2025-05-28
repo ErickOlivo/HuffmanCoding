@@ -1,142 +1,110 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <fstream>            // added for file I/O
+#include <fstream>
+#include <algorithm>
 
 #include "frequency.h"
 #include "HuffmanNode.h"
 #include "HuffmanTree.h"
-#include "HuffmanUtils.h"     // for deleteTree and readFileToString
+#include "HuffmanUtils.h"
 #include "HuffmanCodes.h"
 #include "HuffmanEncoder.h"
 #include "HuffmanDecoder.h"
-#include "CompressedIO.h"     // added for binary compress/decompress
+#include "CompressedIO.h"
 
-int main(int argc, char* argv[]) {
-    // 0. Prepare input and output paths
-    std::string inputPath;
+using huffman::util::writeCompressedFile;
+using huffman::util::readCompressedFile;
+
+/* ------------------------------------------------------------------------- */
+/*  HELP                                                                     */
+/* ------------------------------------------------------------------------- */
+static void printHelp()
+{
+    std::cout <<
+      "HuffmanCoding — command-line usage\n"
+      "  -c <input> <output.huf>   Compress file\n"
+      "  -d <input.huf> <output>   Decompress file\n"
+      "  -h                        Show this help\n"
+      "If no flag is given, a built-in demo with the text \"abracadabra\" runs.\n";
+}
+
+/* ------------------------------------------------------------------------- */
+/*  DEMO PIPELINE (your entire original flow)                                */
+/* ------------------------------------------------------------------------- */
+static int runDemo()
+{
     std::string texto = "abracadabra";
-    std::string salidaBits = "output.bits";
+    std::cout << "Texto original: " << texto << "\n";
 
-    if (argc > 1) {
-        // Use provided file
-        inputPath = argv[1];
-        texto = readFileToString(inputPath);
-        if (argc > 2) {
-            salidaBits = argv[2];
-        }
-    } else {
-        // Write demo text to temporary file
-        inputPath = "input_demo.txt";
-        std::ofstream tmp(inputPath, std::ios::binary);
-        tmp << texto;
-        tmp.close();
-    }
-
-    std::cout << "Texto original:     " << texto << std::endl;
-
-    // 1. Cálculo de frecuencias
+    /* 1. Frecuencias + histograma */
     auto freqMap = computeFrequencies(texto);
-
-    // 1.1 Histograma ASCII a color
     printFrequencyHistogram(freqMap);
 
-    // 2. Construir el árbol de Huffman
+    /* 2. Árbol */
     HuffmanNode* root = buildHuffmanTree(freqMap);
-
-    // 2.1 Mostrar árbol “pretty” en la terminal
-    std::cout << "\nHuffman tree (pretty):" << std::endl;
+    std::cout << "\nÁrbol de Huffman (pretty):\n";
     printHuffmanTreePretty(root);
 
-    // 3. Imprimir un mensaje de confirmación
-    if (root != nullptr) {
-        std::cout << "\nÁrbol de Huffman construido con éxito. "
-                  << "Frecuencia total: " << root->frequency << std::endl;
-    } else {
-        std::cout << "No se pudo construir el árbol (texto vacío o error)." << std::endl;
-    }
-
-    // 4. Generar códigos
+    /* 3. Generar códigos */
     auto codes = generateHuffmanCodes(root);
+    std::cout << "\nCódigos Huffman:\n";
+    for (auto const& [ch, code] : codes)
+        std::cout << "'" << ch << "' => " << code << '\n';
 
-    // 5. Mostrar códigos
-    std::cout << "\nCódigos Huffman generados:\n";
-    for (const auto& pair : codes) {
-        std::cout << "Carácter: '" << pair.first << "' => " << pair.second << '\n';
-    }
+    /* 4. Codificar + stats */
+    std::string encoded = encodeText(texto, codes);
+    reportCompressionStats(texto, encoded);
 
-    // 6. Codificar el texto usando los códigos
-    std::string encodedText = encodeText(texto, codes);
+    /* 5. Decodificar verificación */
+    std::string decoded = decodeText(encoded, root);
+    std::cout << "\nTexto decodificado: " << decoded << "\n";
+    std::cout << (decoded == texto ?
+        "✔ Round-trip OK\n" : "✗ Round-trip failed\n");
 
-    // 6.1 Guardar bitstream lógico
-    writeBitStringToFile(salidaBits, encodedText);
-
-    // --- New: compress to real binary format ---
-    const std::string binOut = "output.huf";
-    if (huffman::util::writeCompressedFile(inputPath, binOut)) {
-        std::cout << "\nBinary compressed file written: " << binOut << std::endl;
-    } else {
-        std::cerr << "\nError writing binary compressed file: " << binOut << std::endl;
-    }
-
-    // --- New: decompress and verify ---
-    const std::string decompressedFile = "decompressed.txt";
-    if (huffman::util::readCompressedFile(binOut, decompressedFile)) {
-        std::cout << "Binary file decompressed to: " << decompressedFile << std::endl;
-
-        std::string originalFromFile = readFileToString(inputPath);
-        std::string roundtrip        = readFileToString(decompressedFile);
-
-        if (roundtrip == originalFromFile) {
-            std::cout << "Round-trip verification: SUCCESS" << std::endl;
-        } else {
-            std::cout << "Round-trip verification: FAILURE" << std::endl;
-            std::cout << "[DEBUG] Original size: " << originalFromFile.size()
-                      << ", Decompressed size: " << roundtrip.size() << std::endl;
-
-            // Detailed character-by-character mismatch
-            size_t len = std::min(roundtrip.size(), originalFromFile.size());
-            for (size_t i = 0; i < len; ++i) {
-                if (roundtrip[i] != originalFromFile[i]) {
-                    std::cout << "[DEBUG] Mismatch at index " << i
-                              << ": original = '" << originalFromFile[i]
-                              << "' (" << static_cast<int>(originalFromFile[i])
-                              << "), decompressed = '" << roundtrip[i]
-                              << "' (" << static_cast<int>(roundtrip[i]) << ")\n";
-                    break;
-                }
-            }
-            if (roundtrip.size() != originalFromFile.size()) {
-                std::cout << "[DEBUG] Sizes differ. Original ends with: '"
-                          << originalFromFile.back() << "' ("
-                          << static_cast<int>(originalFromFile.back()) << "), Decompressed ends with: '"
-                          << roundtrip.back() << "' ("
-                          << static_cast<int>(roundtrip.back()) << ")\n";
-            }
-        }
-    }
-    // --- end new section ---
-
-    // 7. Mostrar resultado
-    std::cout << "\nTexto codificado:   " << encodedText << std::endl;
-
-    // 7.1 Estadísticas de compresión
-    reportCompressionStats(texto, encodedText);
-
-    // 8. Decodificar
-    std::string decodedText = decodeText(encodedText, root);
-    std::cout << "\nTexto decodificado: " << decodedText << std::endl;
-
-    // Validar que el texto original coincide con el decodificado
-    if (decodedText == texto) {
-        std::cout << "Decodificación exitosa: El texto decodificado coincide con el original.\n";
-    } else {
-        std::cout << "Error en la decodificación.\n";
-    }
-
-    // 9. Liberar la memoria del árbol
     deleteTree(root);
     return 0;
+}
+
+/* ------------------------------------------------------------------------- */
+/*  MAIN — CLI flags                                                         */
+/* ------------------------------------------------------------------------- */
+int main(int argc, char* argv[])
+{
+    /* 1. Ayuda */
+    if (argc == 2 && std::string(argv[1]) == "-h") {
+        printHelp();
+        return 0;
+    }
+
+    /* 2. Compress: -c in out.huf */
+    if (argc == 4 && std::string(argv[1]) == "-c") {
+        std::string in  = argv[2];
+        std::string out = argv[3];
+        if (writeCompressedFile(in, out)) {
+            std::cout << "✔ Compressed '" << in << "' → '" << out << "'\n";
+            return 0;
+        }
+        std::cerr << "✗ Compression failed\n";
+        return 1;
+    }
+
+    /* 3. Decompress: -d in.huf out */
+    if (argc == 4 && std::string(argv[1]) == "-d") {
+        std::string in  = argv[2];
+        std::string out = argv[3];
+        if (readCompressedFile(in, out)) {
+            std::cout << "✔ Decompressed '" << in << "' → '" << out << "'\n";
+            return 0;
+        }
+        std::cerr << "✗ Decompression failed (corrupt file?)\n";
+        return 1;
+    }
+
+    /* 4. Sin flags → demo */
+    printHelp();
+    std::cout << "\n--- Running demo ---\n";
+    return runDemo();
 }
 
 
@@ -147,3 +115,20 @@ int main(int argc, char* argv[]) {
 
 // g++ -Iinclude src/*.cpp -o main
 
+
+"""
+# build
+make clean && make all
+
+# show help
+./main -h
+
+# compress
+./main -c samples/sample_short.txt short.huf
+
+# decompress
+./main -d short.huf short_out.txt
+
+# verify
+diff samples/sample_short.txt short_out.txt   # no output ⇒ identical
+"""
