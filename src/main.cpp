@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 // g++ -Iinclude src/*.cpp -o main
 
 
-"""
+/*
 # build
 make clean && make all
 
@@ -131,4 +131,4 @@ make clean && make all
 
 # verify
 diff samples/sample_short.txt short_out.txt   # no output ⇒ identical
-"""
+*/
