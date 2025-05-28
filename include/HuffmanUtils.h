@@ -59,3 +59,14 @@ std::string readFileToString(const std::string& path);
  */
 void writeBitStringToFile(const std::string& path, const std::string& bits);
 
+
+
+/**
+ * @brief Export a Huffman tree to a Graphviz DOT file.
+ *        If you later run `dot -Tsvg tree.dot -o tree.svg`, you get an SVG.
+ *
+ * @param root     Pointer to the tree root.
+ * @param dotPath  Path of the DOT file to generate.
+ */
+void exportTreeToDot(const HuffmanNode* root,
+                     const std::string& dotPath);

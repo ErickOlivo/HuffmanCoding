@@ -167,7 +167,7 @@ void printFrequencyHistogram(const std::unordered_map<char,int>& freqMap)
         double ratio  = static_cast<double>(kv.second) / maxFreq;
         int blocks    = static_cast<int>(ratio * BAR_WIDTH);
         const char* c = COLORS[colorIdx++ % COLORS.size()];
-        
+
         std::cout << "'" << kv.first << "' | "
         << c << std::string(blocks, '#') << "\033[0m "
         << kv.second << '\n';
@@ -176,3 +176,57 @@ void printFrequencyHistogram(const std::unordered_map<char,int>& freqMap)
     }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Export tree to Graphviz DOT                                       */
+/* ------------------------------------------------------------------ */
+#include <sstream>   // para std::ostringstream
+
+/** @brief Función recursiva para recorrer el árbol y emitir nodos/aristas. */
+static void dotHelper(const HuffmanNode* node,
+                      std::ofstream& out,
+                      int& counter)
+{
+    if (!node) return;
+    int thisId = counter++;
+
+    std::ostringstream label;
+    if (!node->left && !node->right)
+        label << node->character << " (" << node->frequency << ")";
+    else
+        label << "*" << " (" << node->frequency << ")";
+
+    out << "  n" << thisId << " [label=\"" << label.str() << "\"];\n";
+
+    if (node->left) {
+        int childId = counter;
+        dotHelper(node->left, out, counter);
+        out << "  n" << thisId << " -> n" << childId << " [label=\"0\"];\n";
+    }
+    if (node->right) {
+        int childId = counter;
+        dotHelper(node->right, out, counter);
+        out << "  n" << thisId << " -> n" << childId << " [label=\"1\"];\n";
+    }
+}
+
+/** @brief Exporta el árbol a un archivo DOT para Graphviz.
+ *
+ * Luego puedes hacer:
+ *     dot -Tsvg tree.dot -o tree.svg
+ * para obtener la visualización en SVG.
+ */
+void exportTreeToDot(const HuffmanNode* root,
+                     const std::string& dotPath)
+{
+    std::ofstream out(dotPath);
+    if (!out) {
+        std::cerr << "Cannot write DOT file: " << dotPath << '\n';
+        return;
+    }
+    out << "digraph Huffman {\n"
+           "  node [shape=ellipse, fontname=\"Courier\"];\n";
+    int counter = 0;
+    dotHelper(root, out, counter);
+    out << "}\n";
+    std::cout << "DOT file written: " << dotPath << '\n';
+}
