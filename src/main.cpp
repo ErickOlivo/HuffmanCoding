@@ -78,11 +78,30 @@ int main(int argc, char* argv[])
     }
 
     /* 2. Compress: -c in out.huf */
-    if (argc == 4 && std::string(argv[1]) == "-c") {
+    /* 2. Compress */
+    if (argc >= 4 && std::string(argv[1]) == "-c") {
         std::string in  = argv[2];
         std::string out = argv[3];
+        bool genTree = (argc == 5 && std::string(argv[4]) == "--tree");
+
         if (writeCompressedFile(in, out)) {
             std::cout << "✔ Compressed '" << in << "' → '" << out << "'\n";
+
+            if (genTree) {
+                /* rebuild tree just for visualisation */
+                std::string data = readFileToString(in);
+                auto freq   = computeFrequencies(data);
+                HuffmanNode* root = buildHuffmanTree(freq);
+                exportTreeToDot(root, "tree.dot");
+                deleteTree(root);
+
+                /* call Graphviz if installed */
+                int rc = std::system("dot -Tsvg tree.dot -o tree.svg");
+                if (rc == 0)
+                    std::cout << "SVG written: tree.svg\n";
+                else
+                    std::cout << "Graphviz 'dot' not found; run it manually.\n";
+            }
             return 0;
         }
         std::cerr << "✗ Compression failed\n";
@@ -131,4 +150,7 @@ make clean && make all
 
 # verify
 diff samples/sample_short.txt short_out.txt   # no output ⇒ identical
+
+make clean && make all
+./main -c samples/sample_short.txt short.huf --tree   # creates tree.dot + tree.svg
 */
