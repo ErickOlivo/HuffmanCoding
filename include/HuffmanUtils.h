@@ -1,5 +1,7 @@
 #pragma once
 #include "HuffmanNode.h"
+#include <string>
+#include <unordered_map>
 
 /**
  * @brief Libera la memoria de un árbol de Huffman.

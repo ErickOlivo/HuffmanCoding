@@ -167,10 +167,11 @@ void printFrequencyHistogram(const std::unordered_map<char,int>& freqMap)
         double ratio  = static_cast<double>(kv.second) / maxFreq;
         int blocks    = static_cast<int>(ratio * BAR_WIDTH);
         const char* c = COLORS[colorIdx++ % COLORS.size()];
-
+        
         std::cout << "'" << kv.first << "' | "
-        << c << std::string(blocks, '\u2588') << "\033[0m "
+        << c << std::string(blocks, '#') << "\033[0m "
         << kv.second << '\n';
+
 
     }
 }
