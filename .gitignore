@@ -17,3 +17,10 @@ bin/
 .DS_Store
 Thumbs.db
 main
+
+echo 'output.huf
+output.bits
+short.huf
+short_out.txt
+decompressed.txt
+input_demo.txt' >> .gitignore
